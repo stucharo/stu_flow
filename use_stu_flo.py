@@ -26,3 +26,12 @@ print(f"    Nummber of values in each set: {branch.count}")
 for n, v in enumerate(branch.values):
     print(f"    Values for {branch.name} set {n+1}: {v}")
 
+# explore the catalog
+random_catalog_number = randint(0, len(ppl.catalog)-1)
+catalog = ppl.catalog[random_catalog_number]
+print(f"\n\nHere is item {random_catalog_number+1} in the catalog...")
+print(f"    Symbol: {catalog.symbol}")
+print(f"    Kind: {catalog.kind}")
+print(f"    Branch: {catalog.branch}")
+print(f"    Units: {catalog.units}")
+print(f"    Description: {catalog.description}")
