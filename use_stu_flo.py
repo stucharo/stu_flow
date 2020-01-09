@@ -18,7 +18,7 @@ for branch in ppl.branches:
     print(f"    {branch.name}")
 
 # pick a random branch
-random_branch_number = randint(0, len(ppl.branches)-1)
+random_branch_number = randint(0, len(ppl.branches) - 1)
 branch = ppl.branches[random_branch_number]
 print("\n\nHere's some info about a random branch...")
 print(f"    Name: {branch.name}")
@@ -27,7 +27,7 @@ for n, v in enumerate(branch.values):
     print(f"    Values for {branch.name} set {n+1}: {v}")
 
 # explore the catalog
-random_catalog_number = randint(0, len(ppl.catalog)-1)
+random_catalog_number = randint(0, len(ppl.catalog) - 1)
 catalog = ppl.catalog[random_catalog_number]
 print(f"\n\nHere is item {random_catalog_number+1} in the catalog...")
 print(f"    Symbol: {catalog.symbol}")

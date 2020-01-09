@@ -16,11 +16,13 @@ regex = {
     "author": re.compile(r"AUTHOR\s*.*"),
     "network": re.compile(r"NETWORK\s*.*"),
     "branch": re.compile(r"BRANCH\s*.*\s*[0-9]+[\s*-?\d*\.\d*]*"),
-    "catalog": re.compile(r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*")
+    "catalog": re.compile(
+        r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*"
+    ),
 }
 
-class PPL:
 
+class PPL:
     def __init__(self, path):
         self.path = path
         self.initialise_variables()
@@ -38,20 +40,14 @@ class PPL:
         self.catalog = []
 
     def parse(self):
-        with open(self.path, 'r') as f:
+        with open(self.path, "r") as f:
             data = f.read()
-        
+
         matches = {k: rx.findall(data) for k, rx in regex.items()}
         self.build_object(matches)
 
     def build_object(self, matches):
-        standard_strings = [
-            'input_file',
-            'restart_file',
-            'project',
-            'title',
-            'author',
-        ]
+        standard_strings = ["input_file", "restart_file", "project", "title", "author"]
         for k, v in matches.items():
             if k in standard_strings:
                 setattr(self, k, v[0].split()[-1][1:-1])
@@ -62,8 +58,8 @@ class PPL:
         self.olga_version = olga_version_list[0].split()[-1][:-1]
 
     def process_date_list(self, date_list):
-        date_str = date_list[0].split('\n')[-1][1:-1]
-        self.date = datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+        date_str = date_list[0].split("\n")[-1][1:-1]
+        self.date = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 
     def process_network_list(self, network_list):
         self.network = int(network_list[0].split()[-1])
@@ -74,16 +70,21 @@ class PPL:
             name = str(b[1][1:-1])
             count = int(b[2])
             vals = np.array(b[3:], dtype=np.float)
-            values = np.split(vals, len(vals) / (count+1))
+            values = np.split(vals, len(vals) / (count + 1))
             self.branches.append(Branch(name, count, values))
 
     def process_catalog_list(self, catalog_list):
-        catalog = catalog_list[0].split('\n')
+        catalog = catalog_list[0].split("\n")
         for c in catalog[2:]:
             sc = c.split(" '")
-            self.catalog.append(Catalog(sc[0], sc[1][:-2], sc[3][:-1], sc[4][1:-2], sc[5][0:-1]))
+            self.catalog.append(
+                Catalog(sc[0], sc[1][:-2], sc[3][:-1], sc[4][1:-2], sc[5][0:-1])
+            )
         if len(self.catalog) != int(catalog[1]):
-            raise Exception(f"Number of catalogue items ({len(self.catalog)}) does not equal value in PPL file ({int(catalog[1])}).")
+            raise Exception(
+                f"Number of catalogue items ({len(self.catalog)}) does not equal value in PPL file ({int(catalog[1])})."
+            )
+
 
 @dataclass
 class Branch:
@@ -101,6 +102,7 @@ class Catalog:
     branch: str
     units: str
     description: str
+
 
 def open_PPL(path):
     ppl = PPL(path)
