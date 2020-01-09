@@ -81,14 +81,9 @@ class Branch:
     name: str
     count: int
     values: List[np.ndarray] = field(default_factory=list)
-    
+
 
 def open_PPL(path):
     ppl = PPL(path)
     ppl.parse()
     return ppl
-
-if __name__ == "__main__":
-
-    ppl = open_PPL('tests\\test_files\\FC1_rev01.ppl')
-    print(ppl.branches[0].values[0].shape)

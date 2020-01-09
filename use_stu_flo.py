@@ -24,5 +24,5 @@ print("\n\nHere's some info about a random branch...")
 print(f"    Name: {branch.name}")
 print(f"    Nummber of values in each set: {branch.count}")
 for n, v in enumerate(branch.values):
-    print(f"    Values for branch {n+1}: {v}")
+    print(f"    Values for {branch.name} set {n+1}: {v}")
 
