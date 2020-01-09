@@ -16,6 +16,7 @@ regex = {
     "author": re.compile(r"AUTHOR\s*.*"),
     "network": re.compile(r"NETWORK\s*.*"),
     "branch": re.compile(r"BRANCH\s*.*\s*[0-9]+[\s*-?\d*\.\d*]*"),
+    "catalog": re.compile(r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*")
 }
 
 class PPL:
@@ -34,6 +35,7 @@ class PPL:
         self.author = None
         self.network = None
         self.branches = []
+        self.catalog = []
 
     def parse(self):
         with open(self.path, 'r') as f:
@@ -75,6 +77,14 @@ class PPL:
             values = np.split(vals, len(vals) / (count+1))
             self.branches.append(Branch(name, count, values))
 
+    def process_catalog_list(self, catalog_list):
+        catalog = catalog_list[0].split('\n')
+        for c in catalog[2:]:
+            sc = c.split(" '")
+            self.catalog.append(Catalog(sc[0], sc[1][:-2], sc[3][:-1], sc[4][1:-2], sc[5][0:-1]))
+        if len(self.catalog) != int(catalog[1]):
+            raise Exception(f"Number of catalogue items ({len(self.catalog)}) does not equal value in PPL file ({int(catalog[1])}).")
+
 @dataclass
 class Branch:
 
@@ -82,6 +92,15 @@ class Branch:
     count: int
     values: List[np.ndarray] = field(default_factory=list)
 
+
+@dataclass
+class Catalog:
+
+    symbol: str
+    kind: str
+    branch: str
+    units: str
+    description: str
 
 def open_PPL(path):
     ppl = PPL(path)
