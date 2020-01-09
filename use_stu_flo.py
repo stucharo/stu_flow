@@ -20,7 +20,7 @@ for branch in ppl.branches:
 # pick a random branch
 random_branch_number = randint(0, len(ppl.branches)-1)
 branch = ppl.branches[random_branch_number]
-print("\n\nHere's some info about a branch...")
+print("\n\nHere's some info about a random branch...")
 print(f"    Name: {branch.name}")
 print(f"    Nummber of values in each set: {branch.count}")
 for n, v in enumerate(branch.values):
