@@ -1,6 +1,8 @@
 from pathlib import Path
 from random import randint
 
+import numpy as np
+
 # import the open_PPL function to let you create a PPL data structure
 from src.stu_flo import open_PPL
 
@@ -26,12 +28,14 @@ print(f"    Nummber of values in each set: {branch.count}")
 for n, v in enumerate(branch.values):
     print(f"    Values for {branch.name} set {n+1}: {v}")
 
-# explore the catalog
-random_catalog_number = randint(0, len(ppl.catalog) - 1)
-catalog = ppl.catalog[random_catalog_number]
-print(f"\n\nHere is item {random_catalog_number+1} in the catalog...")
-print(f"    Symbol: {catalog.symbol}")
-print(f"    Kind: {catalog.kind}")
-print(f"    Branch: {catalog.branch}")
-print(f"    Units: {catalog.units}")
-print(f"    Description: {catalog.description}")
+# explore the dataframe
+d = ppl.data
+# show the top 3 rows
+print(f"\n\n{d.head(3)}")
+
+# show all rows where 'symbol' == 'GLT' and 'branch' == 'old_offshore'
+print(f"\n\n{d[(d['symbol']=='GLT') & (d['branch']=='old_offshore')]}")
+
+# then filter out just the time series data and convert to a numpy array...
+data = d[(d['symbol']=='GLT') & (d['branch']=='old_offshore')].data
+print(f"\n\n{np.array(data)}")

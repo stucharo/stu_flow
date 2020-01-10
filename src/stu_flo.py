@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 import numpy as np
+import pandas as pd
 
 regex = {
     "olga_version": re.compile(r"\'OLGA [\d+.]*\d\'"),
@@ -18,6 +19,9 @@ regex = {
     "branch": re.compile(r"BRANCH\s*.*\s*[0-9]+[\s*-?\d*\.\d*]*"),
     "catalog": re.compile(
         r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*"
+    ),
+    "time_series": re.compile(
+        r"TIME SERIES\s*\'\s*\(.*\)\s*\'(?:\s*-?\d+\.\d+e(?:\+|-)\d+)*"
     ),
 }
 
@@ -38,6 +42,7 @@ class PPL:
         self.network = None
         self.branches = []
         self.catalog = []
+        self.data = None
 
     def parse(self):
         with open(self.path, "r") as f:
@@ -78,14 +83,43 @@ class PPL:
         for c in catalog[2:]:
             sc = c.split(" '")
             self.catalog.append(
-                Catalog(sc[0], sc[1][:-2], sc[3][:-1], sc[4][1:-2], sc[5][0:-1])
-            )
+                    [sc[0],
+                    sc[1][:-2],
+                    sc[3][:-1],
+                    sc[4][1:-2],
+                    sc[5][0:-1],
+            ]
+                )
         if len(self.catalog) != int(catalog[1]):
             raise Exception(
                 f"Number of catalogue items ({len(self.catalog)}) does not equal value in PPL file ({int(catalog[1])})."
             )
 
-
+    def process_time_series_list(self, time_series_list):
+        # convert time series data to a list of floats for time value and Pandas Series' for time series data
+        time_series = [
+            np.array(r.split(), dtype=np.float) if n % (len(self.catalog) + 1) > 0 else float(r)
+            for n, r in enumerate(time_series_list[0].split("\n")[1:])
+        ]
+        times = []
+        series = []
+        for n, v in enumerate(time_series):
+            if n%(len(self.catalog) + 1) == 0:
+                times.append(v)
+            else:
+                series.append(v)
+        import itertools
+        d = {
+            'times': list(itertools.chain.from_iterable(itertools.repeat(x, len(self.catalog)) for x in times)),
+            'symbol': [str(c[0]) for c in self.catalog] * len(times),
+            'kind': [c[1] for c in self.catalog] * len(times),
+            'branch': [c[2] for c in self.catalog] * len(times),
+            'units': [c[3] for c in self.catalog] * len(times),
+            'description': [c[4] for c in self.catalog] * len(times),
+            'data': series
+        }
+        self.data = pd.DataFrame(data=d)
+        
 @dataclass
 class Branch:
 
@@ -102,9 +136,19 @@ class Catalog:
     branch: str
     units: str
     description: str
+    data: np.ndarray
 
 
 def open_PPL(path):
     ppl = PPL(path)
     ppl.parse()
     return ppl
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+
+    ppl_file_path = "tests\\test_files\\FC1_rev01.ppl"
+    ppl = open_PPL(Path(ppl_file_path))
+
+    # print(ppl.catalog)
