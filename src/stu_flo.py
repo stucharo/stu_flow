@@ -3,19 +3,20 @@ import sys
 import dateutil.parser as parser
 from dataclasses import dataclass, field
 from typing import List
+import itertools
 
 import numpy as np
 import pandas as pd
 
 regex = {
-    "olga_version": re.compile(r"\'OLGA [\d+.]*\d\'"),
-    "input_file": re.compile(r"INPUT FILE\n.*"),
-    "restart_file": re.compile(r"RESTART FILE\n.*"),
-    "date": re.compile(r"DATE\n.*"),
-    "project": re.compile(r"PROJECT\n.*"),
-    "title": re.compile(r"TITLE\n.*"),
-    "author": re.compile(r"AUTHOR\n.*"),
-    "network": re.compile(r"NETWORK\n.*"),
+    "olga_version": re.compile(r"\'OLGA ([\d+.]*\d)\'"),
+    "input_file": re.compile(r"INPUT FILE\n\'(.*)\'"),
+    "restart_file": re.compile(r"RESTART FILE\n\'(.*)\'"),
+    "date": re.compile(r"DATE\n\'(.*)\'"),
+    "project": re.compile(r"PROJECT\n\'(.*)\'"),
+    "title": re.compile(r"TITLE\n\'(.*)\'"),
+    "author": re.compile(r"AUTHOR\n\'(.*)\'"),
+    "network": re.compile(r"NETWORK\n(\d*)"),
     "branch": re.compile(
         r"BRANCH\n\'(.*)\'\n(\d*)((?:\s*(?:\+|-)?\d*\.\d*(?:e(?:\+|-)?\d*)?)*)"
     ),
@@ -61,19 +62,18 @@ class PPL:
         standard_strings = ["input_file", "restart_file", "project", "title", "author"]
         for k, v in matches.items():
             if k in standard_strings:
-                setattr(self, k, v[0].split()[-1][1:-1])
+                setattr(self, k, v[0])
             else:
                 getattr(self, f"process_{k}_list")(v)
 
     def process_olga_version_list(self, olga_version_list):
-        self.olga_version = olga_version_list[0].split()[-1][:-1]
+        self.olga_version = olga_version_list[0]
 
     def process_date_list(self, date_list):
-        date_str = date_list[0].split("\n")[-1][1:-1]
-        self.date = parser.parse(date_str, yearfirst=True)
+        self.date = parser.parse(date_list[0], yearfirst=True)
 
     def process_network_list(self, network_list):
-        self.network = int(network_list[0].split()[-1])
+        self.network = int(network_list[0])
 
     def process_branch_list(self, branch_list):
         for branch in branch_list:
@@ -82,6 +82,10 @@ class PPL:
             vals = np.array(branch[2].split(), dtype=np.float)
             values = np.split(vals, len(vals) / (count + 1))
             self.branches.append(Branch(name, count, values))
+        if len(self.branches) != self.network:
+            raise Exception(
+                f"Number of branches ({len(self.branches)}) does not equal value in PPL file ({self.network})."
+            )
 
     def process_catalog_list(self, catalog_list):
         catalog_length = int(catalog_list[0][0])
@@ -109,7 +113,6 @@ class PPL:
                 times.append(v)
             else:
                 series.append(v)
-        import itertools
 
         d = {
             "times": list(
@@ -158,4 +161,4 @@ if __name__ == "__main__":
     ppl_file_path = "tests\\test_files\\FC1_rev01.ppl"
     ppl = open_PPL(Path(ppl_file_path))
 
-    # print(ppl.catalog)
+    print(ppl.date)
