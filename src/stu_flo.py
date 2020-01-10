@@ -9,14 +9,14 @@ import pandas as pd
 
 regex = {
     "olga_version": re.compile(r"\'OLGA [\d+.]*\d\'"),
-    "input_file": re.compile(r"INPUT FILE\s*.*"),
-    "restart_file": re.compile(r"RESTART FILE\s*.*"),
-    "date": re.compile(r"DATE\s*.*"),
-    "project": re.compile(r"PROJECT\s*.*"),
-    "title": re.compile(r"TITLE\s*.*"),
-    "author": re.compile(r"AUTHOR\s*.*"),
-    "network": re.compile(r"NETWORK\s*.*"),
-    "branch": re.compile(r"BRANCH\s*.*\s*[0-9]+[\s*-?\d*\.\d*]*"),
+    "input_file": re.compile(r"INPUT FILE\n.*"),
+    "restart_file": re.compile(r"RESTART FILE\n.*"),
+    "date": re.compile(r"DATE\n.*"),
+    "project": re.compile(r"PROJECT\n.*"),
+    "title": re.compile(r"TITLE\n.*"),
+    "author": re.compile(r"AUTHOR\n.*"),
+    "network": re.compile(r"NETWORK\n.*"),
+    "branch": re.compile(r"BRANCH\n.*\s*[0-9]+[\s*-?\d*\.\d*]*"),
     "catalog": re.compile(
         r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*"
     ),
