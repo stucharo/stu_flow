@@ -16,9 +16,11 @@ regex = {
     "title": re.compile(r"TITLE\n.*"),
     "author": re.compile(r"AUTHOR\n.*"),
     "network": re.compile(r"NETWORK\n.*"),
-    "branch": re.compile(r"BRANCH\n(.*)\n(\d*)((?:\s*(?:\+|-)?\d*\.\d*(?:e(?:\+|-)?\d*)?)*)"),
+    "branch": re.compile(
+        r"BRANCH\n(.*)\n(\d*)((?:\s*(?:\+|-)?\d*\.\d*(?:e(?:\+|-)?\d*)?)*)"
+    ),
     "catalog": re.compile(
-        r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*"
+        r"CATALOG\s*(\d*)((?:\n.+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*)"
     ),
     "time_series": re.compile(
         r"TIME SERIES\s*\'\s*\(.*\)\s*\'(?:\s*-?\d+\.\d+e(?:\+|-)\d+)*"
@@ -48,7 +50,11 @@ class PPL:
         with open(self.path, "r") as f:
             data = f.read()
 
-        matches = {k: v for k, v in {k: rx.findall(data) for k, rx in regex.items()}.items() if len(v) > 0}
+        matches = {
+            k: v
+            for k, v in {k: rx.findall(data) for k, rx in regex.items()}.items()
+            if len(v) > 0
+        }
         self.build_object(matches)
 
     def build_object(self, matches):
@@ -78,18 +84,12 @@ class PPL:
             self.branches.append(Branch(name, count, values))
 
     def process_catalog_list(self, catalog_list):
-        catalog = catalog_list[0].split("\n")
-        for c in catalog[2:]:
-            sc = c.split(" '")
-            self.catalog.append(
-                    [sc[0],
-                    sc[1][:-2],
-                    sc[3][:-1],
-                    sc[4][1:-2],
-                    sc[5][0:-1],
-            ]
-                )
-        if len(self.catalog) != int(catalog[1]):
+        catalog_length = int(catalog_list[0][0])
+        catalog_item_re = re.compile(
+            r"(.+) \s*\'(BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'(.*)\'\s*\'\((.*)\)\'\s*\'(.*)\'"
+        )
+        self.catalog = catalog_item_re.findall(catalog_list[0][1])
+        if len(self.catalog) != catalog_length:
             raise Exception(
                 f"Number of catalogue items ({len(self.catalog)}) does not equal value in PPL file ({int(catalog[1])})."
             )
@@ -97,28 +97,36 @@ class PPL:
     def process_time_series_list(self, time_series_list):
         # convert time series data to a list of floats for time value and Pandas Series' for time series data
         time_series = [
-            np.array(r.split(), dtype=np.float) if n % (len(self.catalog) + 1) > 0 else float(r)
+            np.array(r.split(), dtype=np.float)
+            if n % (len(self.catalog) + 1) > 0
+            else float(r)
             for n, r in enumerate(time_series_list[0].split("\n")[1:])
         ]
         times = []
         series = []
         for n, v in enumerate(time_series):
-            if n%(len(self.catalog) + 1) == 0:
+            if n % (len(self.catalog) + 1) == 0:
                 times.append(v)
             else:
                 series.append(v)
         import itertools
+
         d = {
-            'times': list(itertools.chain.from_iterable(itertools.repeat(x, len(self.catalog)) for x in times)),
-            'symbol': [str(c[0]) for c in self.catalog] * len(times),
-            'kind': [c[1] for c in self.catalog] * len(times),
-            'branch': [c[2] for c in self.catalog] * len(times),
-            'units': [c[3] for c in self.catalog] * len(times),
-            'description': [c[4] for c in self.catalog] * len(times),
-            'data': series
+            "times": list(
+                itertools.chain.from_iterable(
+                    itertools.repeat(x, len(self.catalog)) for x in times
+                )
+            ),
+            "symbol": [str(c[0]) for c in self.catalog] * len(times),
+            "kind": [c[1] for c in self.catalog] * len(times),
+            "branch": [c[2] for c in self.catalog] * len(times),
+            "units": [c[3] for c in self.catalog] * len(times),
+            "description": [c[4] for c in self.catalog] * len(times),
+            "data": series,
         }
         self.data = pd.DataFrame(data=d)
-        
+
+
 @dataclass
 class Branch:
 

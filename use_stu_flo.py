@@ -7,8 +7,9 @@ import numpy as np
 from src.stu_flo import open_PPL
 
 # open a PPL file using it's path
-ppl_file_path = "tests\\test_files\\32in_Peak_Cond_1200MMscfd.ppl"
+ppl_file_path = "tests\\test_files\\AP_Lean_Fluid_Slugtracking_35MMscfd_60bara.ppl"
 ppl = open_PPL(Path(ppl_file_path))
+print('Opened PPL file.\n\n')
 
 # poke around in the PPL object
 print("Here's some metadata...")
@@ -33,9 +34,15 @@ d = ppl.data
 # show the top 3 rows
 print(f"\n\n{d.head(3)}")
 
+# pick a random symbol and branch to interrogate
+sym = d.sample()["symbol"].values[0]
+bch = d.sample()["branch"].values[0]
+
 # show all rows where 'symbol' == 'GLT' and 'branch' == 'old_offshore'
-print(f"\n\n{d[(d['symbol']=='GLT') & (d['branch']=='old_offshore')]}")
+print(f"\n\nShow all rows where 'symbol' == '{sym}' and 'branch' == '{bch}'...")
+print(f"\n{d[(d['symbol']==sym) & (d['branch']==bch)]}")
 
 # then filter out just the time series data and convert to a numpy array...
-data = d[(d['symbol']=='GLT') & (d['branch']=='old_offshore')].data
-print(f"\n\n{np.array(data)}")
+print("\n\nThen just the time series data...")
+data = d[(d["symbol"] == sym) & (d["branch"] == bch)].data
+print(f"\n{np.array(data)}")
