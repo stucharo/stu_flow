@@ -17,7 +17,7 @@ regex = {
     "author": re.compile(r"AUTHOR\n.*"),
     "network": re.compile(r"NETWORK\n.*"),
     "branch": re.compile(
-        r"BRANCH\n(.*)\n(\d*)((?:\s*(?:\+|-)?\d*\.\d*(?:e(?:\+|-)?\d*)?)*)"
+        r"BRANCH\n\'(.*)\'\n(\d*)((?:\s*(?:\+|-)?\d*\.\d*(?:e(?:\+|-)?\d*)?)*)"
     ),
     "catalog": re.compile(
         r"CATALOG\s*(\d*)((?:\n.+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*)"
@@ -44,7 +44,7 @@ class PPL:
         self.network = None
         self.branches = []
         self.catalog = []
-        self.data = None
+        self.time_series = None
 
     def parse(self):
         with open(self.path, "r") as f:
@@ -77,7 +77,7 @@ class PPL:
 
     def process_branch_list(self, branch_list):
         for branch in branch_list:
-            name = branch[0].replace("'", "").replace('"', "").strip()
+            name = branch[0]
             count = int(branch[1])
             vals = np.array(branch[2].split(), dtype=np.float)
             values = np.split(vals, len(vals) / (count + 1))
@@ -124,7 +124,7 @@ class PPL:
             "description": [c[4] for c in self.catalog] * len(times),
             "data": series,
         }
-        self.data = pd.DataFrame(data=d)
+        self.time_series = pd.DataFrame(data=d)
 
 
 @dataclass
