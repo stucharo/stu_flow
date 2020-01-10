@@ -16,7 +16,7 @@ regex = {
     "title": re.compile(r"TITLE\n.*"),
     "author": re.compile(r"AUTHOR\n.*"),
     "network": re.compile(r"NETWORK\n.*"),
-    "branch": re.compile(r"BRANCH\n.*\s*[0-9]+[\s*-?\d*\.\d*]*"),
+    "branch": re.compile(r"BRANCH\n(.*)\n(\d*)((?:\s*(?:\+|-)?\d*\.\d*(?:e(?:\+|-)?\d*)?)*)"),
     "catalog": re.compile(
         r"CATALOG\s*\d*(?:\s*[A-Z]+\s*\'(?:BOUNDARY|SECTION):\'\s*\'BRANCH:\'\s*\'.*\'\s*\'\(.*\)\'\s*\'.*\')*"
     ),
@@ -71,10 +71,9 @@ class PPL:
 
     def process_branch_list(self, branch_list):
         for branch in branch_list:
-            b = branch.split()
-            name = str(b[1][1:-1])
-            count = int(b[2])
-            vals = np.array(b[3:], dtype=np.float)
+            name = branch[0].replace("'", "").replace('"', "").strip()
+            count = int(branch[1])
+            vals = np.array(branch[2].split(), dtype=np.float)
             values = np.split(vals, len(vals) / (count + 1))
             self.branches.append(Branch(name, count, values))
 
