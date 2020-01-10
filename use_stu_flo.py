@@ -7,7 +7,7 @@ import numpy as np
 from src.stu_flo import open_PPL
 
 # open a PPL file using it's path
-ppl_file_path = "tests\\test_files\\FC1_rev01.ppl"
+ppl_file_path = "tests\\test_files\\32in_Peak_Cond_1200MMscfd.ppl"
 ppl = open_PPL(Path(ppl_file_path))
 
 # poke around in the PPL object

@@ -1,6 +1,6 @@
 import re
 import sys
-import datetime
+import dateutil.parser as parser
 from dataclasses import dataclass, field
 from typing import List
 
@@ -48,7 +48,7 @@ class PPL:
         with open(self.path, "r") as f:
             data = f.read()
 
-        matches = {k: rx.findall(data) for k, rx in regex.items()}
+        matches = {k: v for k, v in {k: rx.findall(data) for k, rx in regex.items()}.items() if len(v) > 0}
         self.build_object(matches)
 
     def build_object(self, matches):
@@ -64,7 +64,7 @@ class PPL:
 
     def process_date_list(self, date_list):
         date_str = date_list[0].split("\n")[-1][1:-1]
-        self.date = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        self.date = parser.parse(date_str, yearfirst=True)
 
     def process_network_list(self, network_list):
         self.network = int(network_list[0].split()[-1])
